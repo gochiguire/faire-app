@@ -109,7 +109,6 @@ The object MUST have exactly these keys, in this order:
 3. "desc" : string  
    • A concise, kitchen-ready description of the order, free of fluff.  
    • Format: one line per item → "<qty>x <item name> – <mods if any>"  
-   • Only include when status === "decided"; otherwise leave "" (empty).
 
 NO OTHER FIELDS. NO CHITCHAT. NO EXTRA TEXT OUTSIDE THE JSON.
 Example (for illustration only):
@@ -123,7 +122,7 @@ Example (for illustration only):
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer AQUI`,
+      Authorization: `Bearer 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`,
     },
     body: JSON.stringify({
       model: "gpt-4o-mini",
