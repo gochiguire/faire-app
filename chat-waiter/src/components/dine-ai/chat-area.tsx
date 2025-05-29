@@ -1,14 +1,13 @@
 
 "use client";
 
-import type { ChatMessage as HookChatMessage } from '@/hooks/use-chat-view'; // Use ChatMessage from hook
 import { ChatMessage } from "@/components/dine-ai/chat-message";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
 
 interface ChatAreaProps {
-  messages: HookChatMessage[]; // Use ChatMessage from hook
+  messages: any[]; // Use ChatMessage from hook
   chatContainerRef?: RefObject<HTMLDivElement>; 
 }
 
@@ -23,7 +22,7 @@ export function ChatArea({ messages, chatContainerRef }: ChatAreaProps) {
   }, [messages, refToUse]);
 
   return (
-    <ScrollArea className="flex-1 p-4 bg-background" viewportRef={refToUse}>
+    <ScrollArea className="flex-1 p-4 bg-background">
       <div className="max-w-3xl mx-auto">
         {messages.map((msg, index) => (
           <ChatMessage key={index} message={msg} /> // Use index as key

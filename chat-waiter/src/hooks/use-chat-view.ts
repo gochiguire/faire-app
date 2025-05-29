@@ -52,7 +52,7 @@ export function useChatView(): UseChatViewResult {
 
       /* 3️⃣  server round-trip inside a transition */
       startTransition(() => {
-        updateChatHistory(orders, dinerName, optimisticChat, message)
+        updateChatHistory(orders, dinerName, chatHistory, message)
           .then(({ chat, orders: newOrders }) => {
             setChatHistory(chat);
             setOrders(newOrders as any);
