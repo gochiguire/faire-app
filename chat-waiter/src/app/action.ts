@@ -123,7 +123,7 @@ Example (for illustration only):
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer AKI`,
+      Authorization: `Bearer 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`,
     },
     body: JSON.stringify({
       model: "gpt-4o-mini",
@@ -139,9 +139,10 @@ Example (for illustration only):
     throw new Error(`OpenAI error ${res.status}: ${await res.text()}`);
   }
 
-  const parsed = await res.json();
+  const raw = await res.json();
+  const parsed = raw.choices?.[0]?.message?.content ?? "{}";
 
-  console.log(parsed);
+  console.log({parsed});
 
   const newStatus = parsed.status ?? "ordering";
   const assistantAnswer = parsed.answer ?? "✓ Order noted.";
