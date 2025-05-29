@@ -1,61 +1,74 @@
 // useChatView.ts
-// ----------------
-// A convenience React hook that wraps the three Jotai atoms defined in atoms.ts
-//   • chatHistoryAtom – ChatHistory[] stored in sessionStorage
-//   • userNameAtom    – string stored in sessionStorage
+// --------------------------------------------------------------------
+// A React-hook wrapper around three Jotai atoms:
 //
-// It exposes a minimal API for chat‑oriented UIs:
-//   const {
-//     chatHistory,      // current history array
-//     addMessage,       // append a new user message
-//     newChat,          // clear history
-//     userName,         // current userName string
-//     setUserName,      // update userName
-//   } = useChatView()
+//   • chatHistoryAtom – ChatHistory[] (sessionStorage)
+//   • ordersAtom      – Order[]       (sessionStorage)
+//   • userNameAtom    – string        (sessionStorage)
 //
-// The hook is fully typed and memoized with React.useCallback so that the
-// returned functions stay stable between renders.
-// --------------------------------------------------------------
+// It calls the server action `updateChatHistory`, then syncs the two
+// atoms with the authoritative data returned by the server.
+//
+// --------------------------------------------------------------------
+"use client";
 
 import * as React from "react";
 import { useAtom } from "jotai";
-import { ChatHistory, chatHistoryAtom, userNameAtom } from "./atoms";
+import { startTransition } from "react";
 
+import { chatHistoryAtom, ordersAtom, userNameAtom } from "./atoms";
+import { updateChatHistory } from "@/app/action";
+
+/* ----------  Hook return type ------------------------------------ */
 interface UseChatViewResult {
-  chatHistory: ChatHistory[];
+  chatHistory: any[];
   addMessage: (userName: string, message: string) => void;
   newChat: () => void;
   userName: string;
   setUserName: (name: string) => void;
 }
 
+/* ================================================================= */
 export function useChatView(): UseChatViewResult {
-  /* ------------------------------------------------------------------ */
+  /* ------- atoms -------------------------------------------------- */
   const [chatHistory, setChatHistory] = useAtom(chatHistoryAtom);
+  const [orders, setOrders] = useAtom(ordersAtom);
   const [userName, setUserName] = useAtom(userNameAtom);
 
-  /* Append a new user‑side message and optionally sync userName */
+  /* ------- addMessage – main entry point -------------------------- */
   const addMessage = React.useCallback(
     (userNameParam: string, message: string) => {
-      // Keep the session userName in sync with the param
-      if (userNameParam && userNameParam !== userName) {
-        setUserName(userNameParam);
-      }
+      const dinerName = userNameParam || userName;
 
-      setChatHistory((prev) => [
-        ...prev,
-        { role: "user", content: message } satisfies ChatHistory,
-      ]);
+      /* 1️⃣  keep session userName consistent */
+      if (dinerName !== userName) setUserName(dinerName);
+
+      /* 2️⃣  optimistic UI: add user message locally */
+      const optimisticChat: any[] = [
+        ...chatHistory,
+        { role: "user", content: message },
+      ];
+      setChatHistory(optimisticChat);
+
+      /* 3️⃣  server round-trip inside a transition */
+      startTransition(() => {
+        updateChatHistory(orders, dinerName, optimisticChat, message)
+          .then(({ chat, orders: newOrders }) => {
+            setChatHistory(chat);
+            setOrders(newOrders as any);
+          })
+          .catch(console.error); // handle as you wish
+      });
     },
-    [userName, setUserName, setChatHistory]
+    [chatHistory, orders, userName, setChatHistory, setOrders, setUserName]
   );
 
-  /* Reset the conversation */
+  /* ------- clear the conversation -------------------------------- */
   const newChat = React.useCallback(() => {
     setChatHistory([]);
   }, [setChatHistory]);
 
-  /* ------------------------------------------------------------------ */
+  /* ------- public API --------------------------------------------- */
   return {
     chatHistory,
     addMessage,

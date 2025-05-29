@@ -5,7 +5,7 @@ import { ChatArea } from "@/components/dine-ai/chat-area";
 import { ChatInput } from "@/components/dine-ai/chat-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useChatView, type ChatMessage } from "@/hooks/use-chat-view"; // Updated import
+import { useChatView } from "@/hooks/use-chat-view"; // Updated import
 import { ChefHat, User, Send, RefreshCw } from "lucide-react";
 import { useRef, useState } from "react";
 
