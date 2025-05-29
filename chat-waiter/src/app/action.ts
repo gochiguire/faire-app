@@ -122,7 +122,7 @@ Example (for illustration only):
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer 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`,
+      Authorization: `Bearer aqui`,
     },
     body: JSON.stringify({
       model: "gpt-4o-mini",
