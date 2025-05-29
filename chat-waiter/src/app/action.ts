@@ -14,76 +14,133 @@ import { ChatHistory } from "@/hooks/atoms";
 import { getActiveOrder, getFinisehdOrder } from "@/lib/lib";
 import "server-only";
 
-
 /* ------------------------------------------------------------------ */
 /*  Types returned to the client                                      */
 /* ------------------------------------------------------------------ */
 export interface UpdateResult {
   chat: ChatHistory[]; // full, updated chat history
-  orders: Order[];     // full, updated order list
+  orders: Order[]; // full, updated order list
 }
 
 /* ------------------------------------------------------------------ */
 /*  Action                                                            */
 /* ------------------------------------------------------------------ */
 export async function updateChatHistory(
-  orders: any[],        // current order list for *all* diners
-  userName: string,       // who is chatting
-  chat: ChatHistory[],    // current chat history
-  userMessage: string     // freshly-typed user message
+  orders: any[], // current order list for *all* diners
+  userName: string, // who is chatting
+  chat: ChatHistory[], // current chat history
+  userMessage: string // freshly-typed user message
 ): Promise<UpdateResult> {
   /* 1. Optimistically append the new user message -------------------- */
   const chatPlusUser: ChatHistory[] = [
     ...chat,
-    { role: "user", content: userMessage } satisfies ChatHistory
+    { role: "user", content: userMessage } satisfies ChatHistory,
   ];
 
   /* 2. Build contextual summaries with our helper functions ---------- */
   const { activeOrder, des: activeDes } = getActiveOrder(orders, userName);
   const { orderHistory, des: historyDes } = getFinisehdOrder(orders, userName);
-
+  const menu = `
+:hamburger: Hamburger
+ :dollar: Price: $5.00
+ :garlic: Extras: Tomato, Lettuce
+ :heavy_plus_sign: Add-ons: $0.50 each
+:cheese_wedge: Cheeseburger
+ :dollar: Price: $6.00
+ :garlic: Extras: Tomato, Lettuce
+:warning: Disclaimer: All hamburgers are cooked with standard bread.
+:broccoli: Vegetarian Menu :seedling:
+:carrot: Veggie Delight
+ :dollar: Price: $5.50
+ :garlic: Extras: Tomato, Lettuce, Pickles
+ :heavy_plus_sign: Add-ons: Avocado, Jalapeños – $0.50 each
+:onion: Grilled Portobello Burger
+ :dollar: Price: $6.00
+ :garlic: Extras: Arugula, Caramelized Onion
+ :heavy_plus_sign: Add-ons: Vegan Cheese – $0.50
+:avocado: Avocado Bean Burger
+ :dollar: Price: $6.50
+ :garlic: Extras: Lettuce, Tomato, Guacamole
+ :heavy_plus_sign: Add-ons: Extra Guac – $0.50
+:corn: Falafel Burger
+ :dollar: Price: $5.75
+ :garlic: Extras: Lettuce, Tomato, Hummus
+ :heavy_plus_sign: Add-ons: Feta Cheese – $0.50
+:eggplant: Eggplant Parmesan Burger
+ :dollar: Price: $6.25
+ :garlic: Extras: Marinara, Mozzarella, Basil
+ :heavy_plus_sign: Add-ons: Extra Cheese – $0.50
+:warning: Disclaimer: All vegetarian burgers are served with standard bread. Vegan options available upon request.`;
   /* 3. Craft the **system prompt** using the `des` strings ------------ */
   const systemPrompt = `
-You are the restaurant’s AI ordering assistant.
+You are Waiter-LLM.
+${menu}
 
-Diner context:
+### Menu
+# (leave empty; populate with dishes & prices at runtime)
+
+### Active Order
 ${activeDes}
 
-Past orders:
+### Order History
 ${historyDes}
 
-Respond with a JSON object:
-{
-  "status":  "ordering" | "decided",
-  "answer":  "<chat reply to diner>",
-  "dec":     "<short description of the order (if any)>"
-}`.trim();
+==================  RESPONSE FORMAT  ==================
+Always reply with a single, minified JSON object **and nothing else**.
+The object MUST have exactly these keys, in this order:
+
+1. "answer" : string  
+   • A short, polite statement to the guest.  
+   • Keep it in natural language.  
+   • DO NOT include menu, order lines, or any kitchen instructions here.
+
+2. "status" : string  
+   • Indicates where the guest is in the ordering flow.  
+   • Allowed values (case-sensitive):  
+       "ordering"  – the guest is still choosing or adding items  
+       "decided"   – the guest has finished and the order is final
+
+3. "desc" : string  
+   • A concise, kitchen-ready description of the order, free of fluff.  
+   • Format: one line per item → "<qty>x <item name> – <mods if any>"  
+   • Only include when status === "decided"; otherwise leave "" (empty).
+
+NO OTHER FIELDS. NO CHITCHAT. NO EXTRA TEXT OUTSIDE THE JSON.
+Example (for illustration only):
+
+{"answer":"Certainly! Your Margherita pizza will be right up.","status":"decided","desc":"1x Margherita Pizza – extra basil"}
+
+========================================================`.trim();
 
   /* 4. Call OpenAI in JSON-object mode ------------------------------- */
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer AQUI`
+      Authorization: `Bearer AQUI`,
     },
     body: JSON.stringify({
       model: "gpt-4o-mini",
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },
-        ...chatPlusUser.map(({ role, content }) => ({ role, content }))
-      ]
-    })
+        ...chatPlusUser.map(({ role, content }) => ({ role, content })),
+      ],
+    }),
   });
 
   if (!res.ok) {
     throw new Error(`OpenAI error ${res.status}: ${await res.text()}`);
   }
 
-  const raw  = await res.json();
+  const raw = await res.json();
   const text = raw.choices?.[0]?.message?.content ?? "{}";
 
-  let parsed: { status?: "ordering" | "decided"; answer?: string; dec?: string } = {};
+  let parsed: {
+    status?: "ordering" | "decided";
+    answer?: string;
+    dec?: string;
+  } = {};
   try {
     parsed = JSON.parse(text);
   } catch {
@@ -99,12 +156,12 @@ Respond with a JSON object:
 
   if (activeOrder) {
     // mutate that order in copy of array
-    updatedOrders = updatedOrders.map(o =>
+    updatedOrders = updatedOrders.map((o) =>
       o.id === activeOrder.id
         ? {
             ...o,
             status: newStatus === "decided" ? "desided" : "ordering",
-            desc: newDesc || o.desc
+            desc: newDesc || o.desc,
           }
         : o
     );
@@ -114,19 +171,19 @@ Respond with a JSON object:
       id: crypto.randomUUID(),
       userName,
       desc: newDesc,
-      status: newStatus === "decided" ? "desided" : "ordering"
+      status: newStatus === "decided" ? "desided" : "ordering",
     });
   }
 
   /* 6. Append the model’s answer to the chat ------------------------- */
   const finalChat: ChatHistory[] = [
     ...chatPlusUser,
-    { role: "assistant", content: assistantAnswer }
+    { role: "assistant", content: assistantAnswer },
   ];
 
   /* 7. Return the new state back to the client ----------------------- */
   return {
     chat: finalChat,
-    orders: updatedOrders
+    orders: updatedOrders,
   };
 }
