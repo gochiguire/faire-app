@@ -1,20 +1,22 @@
 "use client"
 
+import { ordersAtom } from "@/hooks/atoms"
+import { useAtom } from "jotai"
 import type React from "react"
 
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext } from "react"
 
 // Data model as specified
+
 export interface Order {
   id: string
   desc: string
   userName: string
   status: "ordering" | "decided" | "cooking" | "finished"
 }
-
 // Hook contract as specified
 interface OrdersContextType {
-  orders: Order[]
+  orders: any[]
   setAsCooking: (orderId: string) => void
   setAsFinished: (orderId: string) => void
   removeOrder: (orderId: string) => void
@@ -58,30 +60,25 @@ const sampleOrders: Order[] = [
 ]
 
 export function OrdersProvider({ children }: { children: React.ReactNode }) {
-  const [orders, setOrders] = useState<Order[]>(sampleOrders)
+  const [orders, setOrders] = useAtom(ordersAtom);
 
-  // Implementation of the hook functions
-  const setAsCooking = (orderId: string) => {
-    setOrders((currentOrders) =>
-      currentOrders.map((order) =>
-        order.id === orderId && (order.status === "ordering" || order.status === "decided")
-          ? { ...order, status: "cooking" }
-          : order,
-      ),
-    )
-  }
+  const setAsCooking = (orderId: string) =>
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId ? { ...order, status: "cooking" } : order
+      )
+    );
 
-  const setAsFinished = (orderId: string) => {
-    setOrders((currentOrders) =>
-      currentOrders.map((order) =>
-        order.id === orderId && order.status === "cooking" ? { ...order, status: "finished" } : order,
-      ),
-    )
-  }
+  const setAsFinished = (orderId: string) =>
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId ? { ...order, status: "finished" } : order
+      )
+    );
 
-  const removeOrder = (orderId: string) => {
-    setOrders((currentOrders) => currentOrders.filter((order) => order.id !== orderId))
-  }
+  const removeOrder = (orderId: string) =>
+    setOrders((prev) => prev.filter((order) => order.id !== orderId));
+
 
   return (
     <OrdersContext.Provider value={{ orders, setAsCooking, setAsFinished, removeOrder }}>
