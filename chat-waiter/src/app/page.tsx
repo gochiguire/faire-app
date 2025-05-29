@@ -1,4 +1,3 @@
-
 "use client";
 
 import { ChatArea } from "@/components/dine-ai/chat-area";
@@ -55,25 +54,29 @@ export default function DineAIHomePage() {
       </header>
 
       <main className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-3xl mx-auto mb-4">
-          <div className="flex items-center gap-2 p-3 bg-card shadow rounded-lg border border-border">
-            <User size={20} className="text-muted-foreground" />
-            <Input
-              type="text"
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              placeholder="Tu nombre"
-              className="flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-              onKeyPress={(e) => { if (e.key === 'Enter') handleSetUserName(); }}
-            />
-            <Button onClick={handleSetUserName} size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
-              Guardar Nombre
-            </Button>
+        {!userName && (
+          <div className="max-w-3xl mx-auto mb-4">
+            <div className="flex items-center gap-2 p-3 bg-card shadow rounded-lg border border-border">
+              <User size={20} className="text-muted-foreground" />
+              <Input
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                placeholder="Tu nombre"
+                className="flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                onKeyPress={(e) => { if (e.key === 'Enter') handleSetUserName(); }}
+              />
+              <Button onClick={handleSetUserName} size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                Guardar Nombre
+              </Button>
+            </div>
           </div>
-           <p className="text-xs text-muted-foreground mt-1 px-1">Usuario actual: {userName}</p>
-        </div>
+        )}
+        {userName && (
+          <p className="text-xs text-muted-foreground mt-1 px-1 mb-4">Usuario actual: {userName}</p>
+        )}
         
-        <div className="flex flex-col h-[calc(100%-100px)] md:h-[calc(100%-120px)]"> {/* Adjusted height for name input */}
+        <div className="flex flex-col h-[calc(100%-100px)] md:h-[calc(100%-120px)]">
           <ChatArea messages={chatHistory} chatContainerRef={chatContainerRef} />
           <ChatInput onSendMessage={handleSendMessage} />
         </div>
