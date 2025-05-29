@@ -55,6 +55,8 @@ export function useChatView(): UseChatViewResult {
         updateChatHistory(orders, dinerName, chatHistory, message)
           .then(({ chat, orders: newOrders }) => {
             setChatHistory(chat);
+            console.log(newOrders);
+
             setOrders(newOrders as any);
           })
           .catch(console.error); // handle as you wish

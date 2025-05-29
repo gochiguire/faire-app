@@ -41,36 +41,42 @@ export async function updateChatHistory(
   const { activeOrder, des: activeDes } = getActiveOrder(orders, userName);
   const { orderHistory, des: historyDes } = getFinisehdOrder(orders, userName);
   const menu = `
-:hamburger: Hamburger
- :dollar: Price: $5.00
- :garlic: Extras: Tomato, Lettuce
- :heavy_plus_sign: Add-ons: $0.50 each
-:cheese_wedge: Cheeseburger
- :dollar: Price: $6.00
- :garlic: Extras: Tomato, Lettuce
-:warning: Disclaimer: All hamburgers are cooked with standard bread.
-:broccoli: Vegetarian Menu :seedling:
-:carrot: Veggie Delight
- :dollar: Price: $5.50
- :garlic: Extras: Tomato, Lettuce, Pickles
- :heavy_plus_sign: Add-ons: Avocado, Jalapeños – $0.50 each
-:onion: Grilled Portobello Burger
- :dollar: Price: $6.00
- :garlic: Extras: Arugula, Caramelized Onion
- :heavy_plus_sign: Add-ons: Vegan Cheese – $0.50
-:avocado: Avocado Bean Burger
- :dollar: Price: $6.50
- :garlic: Extras: Lettuce, Tomato, Guacamole
- :heavy_plus_sign: Add-ons: Extra Guac – $0.50
-:corn: Falafel Burger
- :dollar: Price: $5.75
- :garlic: Extras: Lettuce, Tomato, Hummus
- :heavy_plus_sign: Add-ons: Feta Cheese – $0.50
-:eggplant: Eggplant Parmesan Burger
- :dollar: Price: $6.25
- :garlic: Extras: Marinara, Mozzarella, Basil
- :heavy_plus_sign: Add-ons: Extra Cheese – $0.50
-:warning: Disclaimer: All vegetarian burgers are served with standard bread. Vegan options available upon request.`;
+- Hamburger
+Price: $5.00
+Extras: Tomato, Lettuce
+Add-ons: $0.50 each
+
+- Cheeseburger
+Price: $6.00
+Extras: Tomato, Lettuce
+Disclaimer: All hamburgers are cooked with standard bread.
+
+### Vegetarian Menu :seedling:
+
+- Veggie Delight
+Price: $5.50
+Extras: Tomato, Lettuce, Pickles
+Add-ons: Avocado, Jalapeños – $0.50 each
+
+- Grilled Portobello Burger
+Price: $6.00
+Extras: Arugula, Caramelized Onion
+Add-ons: Vegan Cheese – $0.50
+
+- Avocado Bean Burger
+Price: $6.50
+Extras: Lettuce, Tomato, Guacamole
+Add-ons: Extra Guac – $0.50
+
+- Falafel Burger
+Price: $5.75
+Extras: Lettuce, Tomato, Hummus
+Add-ons: Feta Cheese – $0.50
+Eggplant Parmesan Burger
+Price: $6.25
+Extras: Marinara, Mozzarella, Basil
+Add-ons: Extra Cheese – $0.50
+Disclaimer: All vegetarian burgers are served with standard bread. Vegan options available upon request.`;
   /* 3. Craft the **system prompt** using the `des` strings ------------ */
   const systemPrompt = `
 You are Waiter-LLM.
@@ -117,7 +123,7 @@ Example (for illustration only):
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer AQUI`,
+      Authorization: `Bearer AKI`,
     },
     body: JSON.stringify({
       model: "gpt-4o-mini",
@@ -133,19 +139,9 @@ Example (for illustration only):
     throw new Error(`OpenAI error ${res.status}: ${await res.text()}`);
   }
 
-  const raw = await res.json();
-  const text = raw.choices?.[0]?.message?.content ?? "{}";
+  const parsed = await res.json();
 
-  let parsed: {
-    status?: "ordering" | "decided";
-    answer?: string;
-    dec?: string;
-  } = {};
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    /* fall through with defaults */
-  }
+  console.log(parsed);
 
   const newStatus = parsed.status ?? "ordering";
   const assistantAnswer = parsed.answer ?? "✓ Order noted.";
