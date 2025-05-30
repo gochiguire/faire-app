@@ -145,7 +145,7 @@ Example (for illustration only):
 
   const newStatus = parsed.status ?? "ordering";
   const assistantAnswer = parsed.answer ?? "✓ Order noted.";
-  const newDesc = parsed.dec ?? activeOrder?.desc ?? "";
+  const newDesc = parsed.desc ?? activeOrder?.desc ?? "";
 
   /* 5. Update / create the diner’s active order ---------------------- */
   let updatedOrders = [...orders];
@@ -161,7 +161,7 @@ Example (for illustration only):
           }
         : o
     );
-  } else if (newDesc) {
+  } else {
     // no active order → create one
     updatedOrders.push({
       id: crypto.randomUUID(),
