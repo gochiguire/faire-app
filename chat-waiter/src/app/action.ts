@@ -122,7 +122,7 @@ Example (for illustration only):
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer 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`,
+      Authorization: `Bearer aqui`,
     },
     body: JSON.stringify({
       model: "gpt-4o-mini",
@@ -145,7 +145,7 @@ Example (for illustration only):
 
   const newStatus = parsed.status ?? "ordering";
   const assistantAnswer = parsed.answer ?? "✓ Order noted.";
-  const newDesc = parsed.dec ?? activeOrder?.desc ?? "";
+  const newDesc = parsed.desc ?? activeOrder?.desc ?? "";
 
   /* 5. Update / create the diner’s active order ---------------------- */
   let updatedOrders = [...orders];
@@ -161,7 +161,7 @@ Example (for illustration only):
           }
         : o
     );
-  } else if (newDesc) {
+  } else {
     // no active order → create one
     updatedOrders.push({
       id: crypto.randomUUID(),
